@@ -1,6 +1,6 @@
-										;fichero hola.asm
+										;fichero hello.asm
 section .data							;Inicio de la sección datos, para datos inicializados
-	mensaje bd "Hola ensamblador", 0x0A ;El 10 en ensamblador representa el salto de linea o fin de cadena
+	mensaje db "Hola ensamblador", 10   ;El 10 en ensamblador representa el salto de linea o fin de cadena
 	length equ $-mensaje    			;Ayuda a calcular el tamaño de la variable, con la palabra reservada equ
 
 section .text							;Sección de código
