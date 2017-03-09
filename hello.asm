@@ -15,3 +15,8 @@ section .text							;Sección de código
 	mov ecx, mensaje 					;Pone la dirección de la variable msg en el registro ebx
 	mov edx, length 					;Pone la longitud del mensaje incluido
 	int 80h								;Interrupción, al lanzarse se ejecuta el código, llama al OS
+
+	;Final del programa
+	mov rax,1							;1 en rax- exit
+	mov rbx,0 							;0 salida standar
+	int 80h
