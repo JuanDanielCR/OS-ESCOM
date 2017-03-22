@@ -5,23 +5,29 @@ section .data
 	mdos db 0x0A, "Decremento de 4 es: "
 	tmdos equ $ -mdos
 
-	msuma db 0x0A, "La suma de 2 y 3 es: "
+	msuma db 0x0A, "Suma de 2 y 3 es: "
 	tmsuma equ $ -msuma
 
-	mresta db 0x0A, "La resta de 5 y 1 es:"
+	mresta db 0x0A, "Resta de 5 y 1 es: "
 	tmresta equ $ -mresta
 
-	mprod db 0x0A, "El producto de 3 y 3 es:"
+	mprod db 0x0A, "Producto de 3 y 3 es: "
 	tmprod equ $ -mprod
 
-	mdiv db 0x0A, "La división de 7 y 3 es:"
+	mdiv db 0x0A, "División de 7 y 3 es: "
 	tmdiv equ $ -mdiv
 
-	mresiduo db " residuo: "
+	mresiduo db 0x0A, " residuo: "
 	tmresiduo equ $ -mresiduo
+
+	mprod_signo db 0x0A, "Multiplicación de -4 y 2 es: "
+	tmprod_signo equ $ -mprod_signo
+
 section .bss
 	resultado resb 1;variable temporal: n[ombre] resb [tamaño]
 	residuo resb 1
+
+	mult resb 4
 section .text
 	global _start
 
@@ -145,6 +151,24 @@ section .text
 	mov ebx, 1
 	mov ecx, residuo
 	mov edx, 1
+	int 80h
+;Mensaje 6
+	mov eax, 4
+	mov ebx, 1
+	mov ecx, mprod_signo
+	mov edx, tmprod_signo
+	int 80h
+;Multiplicación con signo
+	mov eax, 2	; DL= -1
+	mov ebx, -4	; AL = -66
+	imul ebx
+	add eax, '0'
+	mov [resultado], eax
+;resultado 
+	mov eax,4
+	mov ebx,1
+	mov ecx,resultado
+	mov edx,1
 	int 80h
 ;Fin del programa
 	mov rax,1
