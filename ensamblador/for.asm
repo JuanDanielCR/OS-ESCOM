@@ -4,9 +4,11 @@ section .data
 section .bss
 	numero resb 1
 	resultado resb 2
+
 section .text
 	global _start
 	_start:
+
 	mov eax,4
 	mov ebx,1
 	mov ecx,m1
@@ -20,19 +22,25 @@ section .text
 	int 80h
 
 	;for
-	mov eax, [numero]
+	mov eax, numero
 	sub eax,'0' ; tomar valor decimal
 	mov ecx, 10
 	for:
+		push ecx
 		mul ecx
 		add eax,'0'
 		mov [resultado],eax
-		push eax
+
 		mov eax, 4
 		mov ebx, 1
-		mov ecx, resultado
+		mov cx, resultado
 		mov edx, 1
+		
 		int 80h
-		pop eax
-	loop for:
-
+		mov eax, numero
+		pop ecx
+	loop for
+	;fin
+	mov rax,1
+	mov rbx,0
+	int 80h
