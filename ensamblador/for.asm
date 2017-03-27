@@ -22,23 +22,23 @@ section .text
 	int 80h
 
 	;for
-	mov rax, numero
 	sub rax,'0' ; tomar valor decimal
 	mov rcx, 10
 	for:
+	;asginar valores a rcx y rax
 		push rcx
+		mov rax, numero
+	;multiplicacion
 		mul rcx
 		add rax,'0'
 		mov [resultado],rax
-		
-
+	;imprimir
 		mov rax, 4
 		mov rbx, 1
 		mov rcx, resultado
 		mov rdx, 1
-		
 		int 80h
-		mov rax, numero
+	;pop	
 		pop rcx
 	loop for
 	;fin
