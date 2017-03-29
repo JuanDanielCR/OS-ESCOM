@@ -22,12 +22,18 @@ section .text
 	int 80h
 
 	;for
-	sub rax,'0' ; tomar valor decimal
+	sub byte[numero],'0'
+
+	;mov ah,1h
+	;int 80h
+	;mov [numero],ah
+
 	mov rcx, 10
 	for:
 	;asginar valores a rcx y rax
 		push rcx
-		mov rax, numero
+		;mov rax,numero
+		mov rax, 0x01
 	;multiplicacion
 		mul rcx
 		add rax,'0'
