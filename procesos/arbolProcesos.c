@@ -15,23 +15,23 @@ int main(int argc, char const *argv[]) {
 	int pid = fork();
 	if(pid == 0){
 	//hijo izq
-		printf("Izq: %d hijos: %d \n", getpid(),hijos_izq);
+		printf("Izq: %d hijos: %d hijo de: %d \n", getpid(),hijos_izq, getppid());
     	crearHijo(1,0,getpid(),hijos_izq);
   	}else if(pid > 0){
   	//padre
-  		wait(&status);
-  		printf("Super: %d \n", getpid());
+  		printf("Soy el padre pid: %d con nivel 0 \n", getpid());
     	int pid2 = fork();
+    	while(wait(&status) > 0);
+
     	if(pid2 == 0){
     	//hijo der
-    		wait(&status);
-    		printf("Der: %d hijos: %d \n", getpid(),hijos_der);
+    		printf("Der: %d hijos: %d hijo de: %d\n", getpid(),hijos_der,getppid());
     		crearHijo(1,0,getpid(),hijos_der);
     	}
   	}else if(pid < 0){
     	printf("%s\n", "Error");
   	}
-  	//printf("%s\n","Bye" );
+  	//printf("%s\n", "bye");
 	return 0;
 }
 
