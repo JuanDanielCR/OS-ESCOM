@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 int main(int argc, char const *argv[]) {
+<<<<<<< HEAD
   int pid = fork();
   /*After calling fork both processes parent and child will execute all the next code*/
   if(pid == 0){
