@@ -1,12 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 int main(int argc, char const *argv[]){
 	int status = 0;
 	int nivel = 0;
+	
 	for(int i=0; i<2;i++){
-		int pid = fork();
+		pid_t pid = fork();
 		if(pid > 0){
 		//padre
 			printf("Soy el padre pid: %d con nivel 0 \n", getpid());
@@ -18,11 +20,13 @@ int main(int argc, char const *argv[]){
 		//en los hijos veo quien es izq y quien der
 			if(i == 0){ //hijo izq, pues i=0
 				nivel++;
-				printf("Soy el izquierdo pid: %d con nivel: %d hijo de:\n", getpid(), nivel,getppid());
+				printf("Izquierdo pid: %d  nivel: %d hijo de: %d \n", getpid(), nivel,getppid());
 			}else{ //hijo der, pues i = 1
 				nivel++;
-				printf("Soy el derechi pid: %d con nivel: %d hijo de: \n", getpid(), nivel,getppid());
+				printf("Derecho pid: %d nivel: %d hijo de: %d \n", getpid(), nivel,getppid());
 			}
+			break;
+			//los hijos ya no siguen el for(), solo el padre
 		}else{
 		//error
 			printf("%s\n", "Error");
@@ -31,3 +35,4 @@ int main(int argc, char const *argv[]){
 	}
 	return 0;
 }
+

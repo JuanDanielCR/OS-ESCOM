@@ -1,0 +1,9 @@
+padre -> n hijos:
+	encargados de multiplicar matrices
+
+matrices: se llenan con 0,1,2, al inicio son cuadradas
+formas de sincronización: pipe, socket, shared memory...
+
+ pipe -> generar un pipe que retorne los resultados de las matrices al padre, para que este las ordene y las imprima
+ 	pipe con nombre
+ 	pipe sin nombre (1)
