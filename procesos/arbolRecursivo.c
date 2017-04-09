@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 int nivel = 0;
 int hijos_izq = 0;
@@ -12,7 +13,7 @@ void crearHijo(int nivel_actual,int numero_hijos, int pid_padre, int hijos_max);
 
 int main(int argc, char const *argv[]) {
 	menu();
-	int pid = fork();
+	pid_t pid = fork();
 	if(pid == 0){
 	//hijo izq
 		printf("Izq: %d hijos: %d hijo de: %d \n", getpid(),hijos_izq, getppid());
@@ -20,7 +21,7 @@ int main(int argc, char const *argv[]) {
   	}else if(pid > 0){
   	//padre
   		printf("Soy el padre pid: %d con nivel 0 \n", getpid());
-    	int pid2 = fork();
+    	pid_t pid2 = fork();
     	while(wait(&status) > 0);
 
     	if(pid2 == 0){
@@ -43,7 +44,7 @@ void crearHijo(int nivel_actual, int numero_hijos, int pid_padre, int hijos_max)
 	}else{
 		nivel_actual++;
 		numero_hijos++;
-		int hijo = fork();
+		pid_t hijo = fork();
 		if(hijo == 0){
 		//hijo
 			printf("Soy el proceso %d hijo de %d con nivel %d \n", getpid(),pid_padre,nivel_actual);
