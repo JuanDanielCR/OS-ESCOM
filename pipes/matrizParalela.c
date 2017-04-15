@@ -7,12 +7,17 @@
 void *crearMatriz(int, int, int **);
 void imprimirMatriz(int, int, int **);
 void *multiplicarMatriz(int **, int **, int **,int, int);
-int filas1,columnas1,filas2,columnas2, hijos, status;
+int filas1,columnas1,filas2,columnas2, hijos, anchoRango, status;
 
 int main(int argc, char const *argv[])
 {
 	int **A, **B, **C;
 	srand(time(NULL));
+//Creación pipe
+	int fd[2]; 
+	int recibi = 0;
+	pipe(fd);
+
 //Creación matriz A
 	printf("%s\n", "Matriz A");
 	printf("%s", "No. filas: ");
@@ -39,19 +44,27 @@ int main(int argc, char const *argv[])
 	//Creacion de los hijos
 		printf("\n%s", "# procesos hijos: ");
 		scanf("%d", &hijos);
+	//Calculo del ancho del rango
+		anchoRango = filas1 / hijos;
+		printf("ancho: %d\n", anchoRango);
 		for(int i = 0; i < hijos; i++){
 			pid_t pid = fork();
 			if(pid > 0){
 			//padre, junta las matrices
-				if(i == (hijos-1)){//ultima iteración 
-					while(wait(&status) > 0);
-						
-				}
+				//Cerrar escritura
+				close(fd[1]); 
+				while(wait(&status) > 0);
+				read(fd[0], &recibi, sizeof(recibi));
+
 			}else if(pid == 0){
 			//hijo
-				C = multiplicarMatriz(A,B,C,0,filas1); 
-				imprimirMatriz(filas1,columnas2,C);
-				printf("%d\n", getpid());
+				//Cerrar lectura en el hijo
+				close(fd[0]);
+				int aux = 666;
+				write(fd[1],&aux, sizeof(recibi));
+				printf("i: %d\n", i+1);
+				//C = multiplicarMatriz(A,B,C,0,filas1); 
+				//imprimirMatriz(filas1,columnas2,C);
 				break; //los hijos ya no siguen el for
 			}else{
 				printf("%s\n","Error procesos");
@@ -60,7 +73,7 @@ int main(int argc, char const *argv[])
 		}
 		
 	}
-	printf("\n %s \n", "¡Adios!");
+	//printf("\n %s \n", "¡Adios!");
 	return 0;
 }
 
