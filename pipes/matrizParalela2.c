@@ -44,42 +44,29 @@ int main(int argc, char const *argv[])
 	//Creacion de los hijos
 		printf("\n%s", "# procesos hijos: ");
 		scanf("%d", &hijos);
-		int pipesfd[hijos][2];
 	//Calculo del ancho del rango
 		anchoRango = filas1 / hijos;
 		printf("ancho: %d\n", anchoRango);
 		for(int i = 0; i < hijos; i++){
-			pipe(pipesfd[i]);
+			pipe(fd);
 			pid_t pid = fork();
 			if(pid > 0){
 			//padre, junta las matrices
-				close(pipesfd[i][1]);
-				if(i == (hijos-1)){
-					long ig = 0;
-					//Todos los hijos creados, esperamos a que multipliquen
-					//while(wait(&status) > 0);
-					printf("%s\n", "Mis hijos terminaron el trabajo, ahora tengo que juntar todo...");
-					//Leyendo datos del pipe
-					int tuplaRecibida[3];
-					for (int i = 0; i < hijos; i++){
-						if(i > 0){
-								close(pipesfd[i-1][0]);
-							}						
-							while ((n = read(pipesfd[i][0], &tuplaRecibida, sizeof(tuplaRecibida))> 0)) { 
-							// Read until it returns 0 (EOF) or -1 (error)
-							//printf("papa: i: %d j: %d valor: %d \n", tuplaRecibida[0], tuplaRecibida[1],tuplaRecibida[2]);
-							C[tuplaRecibida[0]][tuplaRecibida[1]] = tuplaRecibida [2]; 
-							//printf("%s", ".");
-							ig++;
-						}				
-					}
-					
+				close(fd[1]);
+			while(wait(&status) > 0);
+			//Leyendo datos del pipe
+				int tuplaRecibida[3];
+				while ((n = read(fd[0], &tuplaRecibida, sizeof(tuplaRecibida))> 0)) { 
+				// Read until it returns 0 (EOF) or -1 (error)
+			 	/*---printf("i: %d j: %d valor: %d \n", tuplaRecibida[0], tuplaRecibida[1],tuplaRecibida[2]);---*/
+			    	C[tuplaRecibida[0]][tuplaRecibida[1]] = tuplaRecibida [2]; 
+				}
+				finishedPipes++;
+				if(finishedPipes == hijos){
 					imprimirMatriz(filas1,columnas2,C);
-					printf("\n%s %d datos, con %d hijos\n","El papá termino de juntar: ", ig,hijos );
 				}
 			}else if(pid == 0){
 			//hijo
-				close(pipesfd[i][0]);
 			//Calculando rago con la formula dada
 				int min = (((i+1)*anchoRango)-anchoRango);
 				int max = ((i+1)*anchoRango)-1;
@@ -92,23 +79,19 @@ int main(int argc, char const *argv[])
 				printf("i: %d min: %d max: %d\n", i+1,min,max);
 			//Realizando la multiplicación usando como limites a min, max
 				C = multiplicarMatriz(A,B,C,min,max);
-				printf("Termine: %d\n", i+1);
-				//imprimirMatriz(filas1,columnas2,C);
+				/*----imprimirMatriz(filas1,columnas2,C);----*/
 			//Enviando información a través del pipe
-				int tuplaMatriz[3];
-				int pipe_i = i;
+				close(fd[0]);
 				for(int i = min; i <= max; i++){
 					for(int j = 0; j < columnas2;j++){
-						
+						int tuplaMatriz[3];
 						tuplaMatriz[0] = i;
 						tuplaMatriz[1] = j;
 						tuplaMatriz[2] = C[i][j];
-						/*--printf("i: %d j: %d valor: %d \n", tuplaMatriz[0], tuplaMatriz[1],tuplaMatriz[2]);--*/
-						write(pipesfd[pipe_i][1],&tuplaMatriz, sizeof(tuplaMatriz));
+						write(fd[1],&tuplaMatriz, sizeof(tuplaMatriz));
 					}
 				}
-
-				close(pipesfd[i][1]);
+				close(fd[1]);
 				break; //los hijos ya no siguen el for
 			}else{
 				printf("%s\n","Error procesos");
