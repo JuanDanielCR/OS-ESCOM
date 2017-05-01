@@ -6,12 +6,12 @@
 void hilo1(void *);
 
 int main(int argc, char const *argv[]) {
-  pthread_t tid[10];
+  pthread_t tid[10]; //Visible para todos los threads
 
   for (int i = 0; i < 10; i++) {
     int valores[10];
     valores[i] = i;
-    pthread_create(&tid[i], NULL, (void*)hilo1, (void *)&valores[i]);
+    pthread_create(&tid[i], NULL, (void*)hilo1, (void *)&valores[i]); //valores[i] es un valor, pasar su direccion
   }
   for (size_t j = 0; j < 10; j++) {
     pthread_join(tid[j],NULL);
@@ -20,12 +20,30 @@ int main(int argc, char const *argv[]) {
   return 0;
 }
 
-void hilo1(void *args){
-  int *param = (int*)args;
+void hilo1(void *args){ 
+  int *param = (int*)args; 
 
   printf("%d\n",*param);
   pthread_exit(NULL);
+  /*
+    ALSO:
+    int param = *(int*)args;
+    printf("%d\n",param);
+  */
 }
+
+/*   
+    OR:
+    pthread_create(&tid[i], NULL, (void*)hilo1, (void *)valores[i]); Aqui paso el valor de valores[i]
+    
+    void hilo1(void *args){ 
+      int param = (int)args; Recibo el valor como tal
+      printf("%d\n",param);
+      pthread_exit(NULL);
+    }
+*/
+
+
 /*
 Thread (proceso ligero): solo copia su subrutina, y tiene acceso a la memoria global del proceso que lo creo
 
