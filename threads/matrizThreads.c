@@ -30,6 +30,10 @@ void *multiplicarMatriz(void *args){
 
 	//Filas de A deben ser iguales a col de B
 	for(int i = 0, a = min; i < filasResultantes; i++, a++){ //filas de la resultante
+		/*
+			i - Da acceso a la resultante por eso inicia en 0
+			a - Da acceso a las matrices orginanles pro eso empezaran en el minimo de cada thread
+		*/
 		for (int j = 0; j < columnas; j++){ //columnas resultantes
 			matrizData->R[i][j] = 0;
 			for(int k = 0; k < filas; k++){//
