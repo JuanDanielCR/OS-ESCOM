@@ -3,7 +3,13 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+#include <time.h>
 
+//timer
+clock_t start, end;
+double cpu_time_used;
+
+//matrices
 int **A, **B, **C;
 int filas1, columnas1, filas2, columnas2, numThreads, anchoRango;
 void *crearMatriz(int, int, int **);
@@ -33,6 +39,7 @@ void *multiplicarMatriz(void *args){
 }
 
 int main(int argc, char const *argv[]){
+	start = clock();
 	srand(time(NULL));
 	void *returned;
 //Llenando matriz 1
@@ -71,6 +78,11 @@ int main(int argc, char const *argv[]){
 	}
 	printf("%s\n", "Resultado: ");
 	imprimirMatriz(filas1,columnas2, C);
+
+	end = clock();
+	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+	printf("Tiempo de procesamiento: %f \n",cpu_time_used);
 	return 0;
 }
 

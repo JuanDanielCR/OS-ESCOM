@@ -3,6 +3,11 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+#include <time.h>
+
+//timer
+clock_t start, end;
+double cpu_time_used;
 
 struct unidadMatriz{
 	int **M1;
@@ -46,6 +51,7 @@ void *multiplicarMatriz(void *args){
 }
 
 int main(int argc, char const *argv[]){
+	start = clock();
 	srand(time(NULL));
 //Variables locales a enviar para los threads
 	void *devuelto;
@@ -129,6 +135,10 @@ for(int j = 0; j < numThreads; j++){
 	printf("%s\n", "Resultado: ");
 	imprimirMatriz(filas1,columnas2, C);
 	
+	end = clock();
+	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+	printf("Tiempo de procesamiento: %f \n",cpu_time_used);
 	return 0;
 }
 
