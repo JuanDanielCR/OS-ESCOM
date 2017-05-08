@@ -36,6 +36,8 @@ void *multiplicarMatriz(void *args){
 			} 
 		}
 	}
+
+	pthread_exit(NULL);
 }
 
 int main(int argc, char const *argv[]){
