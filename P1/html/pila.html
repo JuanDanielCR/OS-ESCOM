@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="utf8">
+	<title>Estructuras de Datos</title>
+	<link rel="stylesheet" type="text/css" href="../css/normalize.css">
+	<link rel="stylesheet" type="text/css" href="../css/index.css">
+	<link rel="stylesheet" type="text/css" href="../css/pila.css">
+	<link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet">
+</head>
+<body>
+	<header>
+		<ul>
+			<li><a href="../index.html">Inicio</a></li>
+			<li><a href="style.html">Style Guide</a></li>
+			<li><a href="cola.html">Cola</a></li>
+			<li><a href="lista.html">Lista</a></li>
+		</ul>
+	</header>
+	<section class="dataContainer">
+		<h1 class="titulo">Pila</h1>
+		<article class="nodoContainer">
+			<div class="nodoShow" id="nodoBase">
+				<h3>Nodo</h3>
+				<p>Valor: <span id="nodoValue">-</span><p>
+				<p>Siguiente: <span>Ninguno</span></p>
+			</div>
+			<div class="nodoMenu">
+				<p>Valor: <input type="text" placeholder="Contenido del nodo" id="txtNodo" required><br></p>
+				<button id="btnNodo">Crear Nodo</button>
+				<button id="btnPush">Push</button>
+				<button id="btnPop">Pop</button>
+				<p>Mensaje: <span id="msjContainer"></span></p>
+			</div>
+		</article>
+		<article class="stackContainer">
+			<div id="stackDiv">
+				<!--JS-->
+			</div>
+		</article>
+	</section>
+	<script type="text/javascript" src="../js/pila.js"></script>
+</body>
+</html>

@@ -33,10 +33,12 @@ int initsem(key_t key, int nsems)  /* key from ftok() */
 	semid = semget(key, nsems, IPC_CREAT | IPC_EXCL | 0666);
 
 	if (semid >= 0) { /* we got it first */
-		sb.sem_op = 1; sb.sem_flg = 0;
+		sb.sem_op = 1; 
+		sb.sem_flg = 0;
 		arg.val = 1;
 
-		printf("press return\n"); getchar();
+		printf("press return\n"); 
+		getchar();
 
 		for(sb.sem_num = 0; sb.sem_num < nsems; sb.sem_num++) { 
 			/* do a semop() to "free" the semaphores. */
