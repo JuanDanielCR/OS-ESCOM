@@ -7,7 +7,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-#define NUM_ZONAS 8
+#define NUM_ZONAS 4
 char **zonaCritica;
 int semid, columnas,numero_repeticiones, x=0,y=0,z=0;
 struct sembuf operacion;
@@ -117,14 +117,13 @@ void *productor(void*args){
 					break; //Terminamos el ciclo pues ya encontramos un semaforo abierto
 				}
 			}
-		signalS((NUM_ZONAS*2)+1); //5 - Semaforo externo consumidor
+		signalS(5); //5 - Semaforo externo consumidor
 	}
-	pthread_exit(0);
 }
 void *consumidor(void * args){
 	int semValue;
 	for(int n = 0; n < numero_repeticiones; n++){
-		waitS((NUM_ZONAS*2)+1); // Semaforo externo del productor
+		waitS(5); // Semaforo externo del productor
 			//Si ya entre (no estoy dormido) leo información de una zona crítica
 			for(int i = NUM_ZONAS+1; i <= NUM_ZONAS*2;i++){ //Ver que zona critica esta abierta para poder leer de ella
 				//Obtener valor del semaforo en la posicion i
@@ -143,10 +142,9 @@ void *consumidor(void * args){
 			}
 		signalS(0); //Avisando al semaforo externo del productor que ya lei
 	}
-	pthread_exit(0);
 }
 void waitS(int posicion){
-	printf("wait: %d \n", posicion);
+	//printf("wait: %d \n", posicion);
 	operacion.sem_num = posicion;
 	operacion.sem_op = -1;
 	operacion.sem_flg = SEM_UNDO;
@@ -156,7 +154,7 @@ void waitS(int posicion){
 }
 
 void signalS(int posicion){
-	printf("signal: %d \n", posicion);
+	//printf("signal: %d \n", posicion);
 	operacion.sem_num = posicion;
 	operacion.sem_op = 1;
 	operacion.sem_flg = SEM_UNDO;

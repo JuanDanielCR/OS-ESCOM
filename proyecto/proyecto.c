@@ -6,25 +6,37 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/shm.h>
 
 #define NUM_ZONAS 8
-char **zonaCritica;
-int semid, columnas,numero_repeticiones, x=0,y=0,z=0;
+
+struct Conexion *zonaCritica;
+int shmid, semid, columnas,numero_repeticiones, x=0,y=0,z=0;
 struct sembuf operacion;
+
+struct Conexion{
+	char nombre [50];
+	char telefono [10];
+	char mensaje [50];
+	char proveedor [20];
+	short tipo; // 1-Llamada, 0-Mensaje
+};
 
 void *inicializarZonaCritica(int, int, int**);
 void *productor(void *);
 void *consumidor(void *);
 void waitS(int);
 void signalS(int);
+int crearMemoria();
+void destruyeMemoria(int, struct Conexion **);
 
 int main(int argc, char const *argv[]){
 	pthread_t productores[3];
 	pthread_t consumidores[3];
 
 	//Creación de la llave para los semaforos
-	key_t key = ftok("/bin/ls","A");
-	
+	key_t key = ftok("/bin/ls",'A');
+
 	//Inicialización de la zona crítica
 	printf("Caracteres X zona: \n"); //ancho de cada zona critica
 	scanf("%d",&columnas);
@@ -66,7 +78,8 @@ int main(int argc, char const *argv[]){
     for(int m=0;m<3;m++){
         pthread_join(consumidores[m],NULL);
     }
-
+    //Borramos la memoria solo si los consumidores ya no la necesitan
+    destruyeMemoria(shmid, zonaCritica);
     //Verificando número de producciones
     printf("Verificando número de producciones: \n");
     printf("x: %d y: %d z: %d \n",x,y,z);
@@ -83,6 +96,9 @@ void *inicializarZonaCritica(int filas, int columnas, int **zonaCritica){
 	return zonaCritica;
 }
 void *productor(void*args){
+	//accediendo a la memoria compartida
+	shmid = crearMemoria();
+
 	//viendo que thread productor soy
 	int thread_id = (int)args;
 	int semValue;
@@ -90,15 +106,18 @@ void *productor(void*args){
 		//imprimiendo caracter n veces
 	for(int n = 0; n < numero_repeticiones; n++){
 		if(thread_id == 0){
-			caracter = 'X';
+			//TELCEL
 			x++;
 		}else if(thread_id == 1){
-			caracter = 'Y';
+			//MOVISTAR
 			y++;
 		}else{
-			caracter = 'Z';
+			//IUSACELL
 			z++;
 		}
+		//Creacion y llenado aleatorio de una estructura
+		struct Conexion conexion;
+
 		//sleeping process
 		waitS(0); // 0 - Semaforo externo productor
 			//Si ya entre es por que hay alguna zona abierta
@@ -111,20 +130,24 @@ void *productor(void*args){
 					waitS(i); //Cerramos el semaforo que nos corresponde
 						//Llenamos la zona critica con el valor del caracter correspondiente al thread actual
 						for(int j=0;j<columnas;j++){ 
-							zonaCritica[i-1][j] = caracter; 
+							zonaCritica[i-1][j] = conexion; 
 						}
 					signalS(NUM_ZONAS+i);//Avisamos al semaforo del consumidor que estará en i+NUM_ZONAS que ya puede leer
 					break; //Terminamos el ciclo pues ya encontramos un semaforo abierto
 				}
 			}
-		signalS((NUM_ZONAS*2)+1); //5 - Semaforo externo consumidor
+		signalS(5); //5 - Semaforo externo consumidor
 	}
-	pthread_exit(0);
 }
 void *consumidor(void * args){
+	//Conexion a la memoria compartida
+	shmid = crearMemoria();
+	//Creacion de la struct receptora
+	struct Conexion receptora;
+	//Semaforo
 	int semValue;
 	for(int n = 0; n < numero_repeticiones; n++){
-		waitS((NUM_ZONAS*2)+1); // Semaforo externo del productor
+		waitS(5); // Semaforo externo del productor
 			//Si ya entre (no estoy dormido) leo información de una zona crítica
 			for(int i = NUM_ZONAS+1; i <= NUM_ZONAS*2;i++){ //Ver que zona critica esta abierta para poder leer de ella
 				//Obtener valor del semaforo en la posicion i
@@ -134,7 +157,7 @@ void *consumidor(void * args){
 					waitS(i);//Lo cierro
 						//Leemos la info
 						for(int j=0;j<columnas;j++){
-							printf("%c ",zonaCritica[(i-NUM_ZONAS-1)][j]);
+							receptora = zonaCritica[(i-NUM_ZONAS-1)][j];
 						}
 						printf("\n");
 					signalS(i-NUM_ZONAS); //Aviso a los productores que ya lei de esta zona
@@ -143,10 +166,9 @@ void *consumidor(void * args){
 			}
 		signalS(0); //Avisando al semaforo externo del productor que ya lei
 	}
-	pthread_exit(0);
 }
 void waitS(int posicion){
-	printf("wait: %d \n", posicion);
+	//printf("wait: %d \n", posicion);
 	operacion.sem_num = posicion;
 	operacion.sem_op = -1;
 	operacion.sem_flg = SEM_UNDO;
@@ -156,11 +178,51 @@ void waitS(int posicion){
 }
 
 void signalS(int posicion){
-	printf("signal: %d \n", posicion);
+	//printf("signal: %d \n", posicion);
 	operacion.sem_num = posicion;
 	operacion.sem_op = 1;
 	operacion.sem_flg = SEM_UNDO;
 	if(semop(semid,&operacion,1)==-1){
 		printf("error signal\n");
+	}
+}
+
+int crearMemoria(){
+	//Creacion de la llave para la memoria compartida
+	key_t key2 = ftok("/bin/ls",'B');
+
+	//Creacion o attachment a la memoria compartida
+	int shmid;
+	//Creacion
+	if((shmid = shmget(key2,(sizeof(struct Conexion)*8),IPC_CREAT|IPC_EXCL|0666))==-1){
+	//Ya existe el segmento, asi que lo abrimos como cliente
+		if((shmid = shmget(key2,(sizeof(struct Conexion)*8),0))==-1){
+			printf("Error en la conexion a un segmento ya existente\n");
+		}else{
+			printf("Conexion a: %d\n", shmid);
+		}
+	}else{
+	//Se crea el segmento, posteriormente nos conectaremos
+		printf("Creación del segmento de memoria:  %d\n", shmid);
+	}
+	//Attachment, dividimos la region conectada en apuntadores de tipo Conexion hasta que nos alcanze
+	if((zonaCritica = (struct Conexion **)shmat(shmid,(struct Conexion **) 0, 0))==(void **)-1){
+		perror("Error en el attachment");
+      	exit(1);
+	}
+	return shmid;
+}
+
+void destruyeMemoria(int id, struct Conexion* buffer){
+	//Validamos que la memoria no haya sido destruida aun
+	if(id != 0 || id!=-1){
+		shmdt (buffer); //Deattached de toda la memoria que tenga buffer, que es la misma que usamos con shmat()
+		//Borrando el segmento de memoria compartida del disco, ningun proceso podra hacer attach despues
+    	shmctl (id, IPC_RMID, (struct shmid_ds *)NULL);
+    	printf("Destruccion logica de la memoria compartida\n");
+	}else{
+		//La memoria ya fue destruida asi que solo hacemos del deattached logico
+		shmdt (buffer); 
+		printf("Deattached logico\n");
 	}
 }
