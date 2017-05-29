@@ -38,8 +38,9 @@ int main(int argc, char const *argv[]){
 	//Inicialización de los semaforos
 
 		//Semaforos externos
+		printf("%d",num_semaphores);
 		semctl(semid,0,SETVAL,NUM_ZONAS); //semaforo externo productores
-		semctl(semid,num_semaphores,SETVAL,0); //semaforo externo consumidores
+		semctl(semid,(num_semaphores-1),SETVAL,0); //semaforo externo consumidores
 		//Semáforos internos
 			//productores - inician abiertos para que se pueda escribir
 			for(int i=1;i <= NUM_ZONAS;i++){
@@ -48,6 +49,17 @@ int main(int argc, char const *argv[]){
 			//consumidores - inician cerrados esperando que se escriba
 			for(int j = NUM_ZONAS+1; j <= NUM_ZONAS*2;j++){
 				semctl(semid,j,SETVAL,0);
+			}
+			printf("P: %d\n", semctl(semid,0,GETVAL,NULL));
+			printf("C: %d\n", semctl(semid,(num_semaphores-1),GETVAL,NULL));
+			for(int i=1;i <= NUM_ZONAS;i++){
+				int aux = semctl(semid,i,GETVAL,NULL);
+				printf("p: %d\n",aux);
+			}
+			//consumidores - inician cerrados esperando que se escriba
+			for(int j = NUM_ZONAS+1; j <= NUM_ZONAS*2;j++){
+				int aux = semctl(semid,j,GETVAL,NULL);
+				printf("c: %d\n",aux);
 			}
 	//numeros de repeticiones
 	printf("¿Cuántas veces imprimo mi caracter?\n");
@@ -103,21 +115,26 @@ void *productor(void*args){
 		waitS(0); // 0 - Semaforo externo productor
 			//Si ya entre es por que hay alguna zona abierta
 			//Recorro las zonas hasta encontrar la que esta abierta
-			for(int i=1; i <= NUM_ZONAS; i++){
+			for(int i=1, k=NUM_ZONAS+1; i <= NUM_ZONAS; i++,k++){
 				//Obtener valor del semaforo en la posicion i
 				semValue = semctl(semid, i, GETVAL, NULL);
+				printf("p: %d",semValue);
 				//Evaluamos para ver si el semaforo de la zona critica esta abierto
-				if(semValue > 0){ //Semaforo abierto
+				if(semValue == 1){ //Semaforo abierto
 					waitS(i); //Cerramos el semaforo que nos corresponde
 						//Llenamos la zona critica con el valor del caracter correspondiente al thread actual
 						for(int j=0;j<columnas;j++){ 
 							zonaCritica[i-1][j] = caracter; 
 						}
-					signalS(NUM_ZONAS+i);//Avisamos al semaforo del consumidor que estará en i+NUM_ZONAS que ya puede leer
+					signalS(k);//Avisamos al semaforo del consumidor que estará en i+NUM_ZONAS que ya puede leer
+					signalS((NUM_ZONAS*2)+1); //5 - Semaforo externo consumidor
 					break; //Terminamos el ciclo pues ya encontramos un semaforo abierto
 				}
+				if(i==NUM_ZONAS){
+					i = 1;
+					k = NUM_ZONAS+1;
+				}
 			}
-		signalS((NUM_ZONAS*2)+1); //5 - Semaforo externo consumidor
 	}
 	pthread_exit(0);
 }
@@ -126,27 +143,32 @@ void *consumidor(void * args){
 	for(int n = 0; n < numero_repeticiones; n++){
 		waitS((NUM_ZONAS*2)+1); // Semaforo externo del productor
 			//Si ya entre (no estoy dormido) leo información de una zona crítica
-			for(int i = NUM_ZONAS+1; i <= NUM_ZONAS*2;i++){ //Ver que zona critica esta abierta para poder leer de ella
+			for(int i = NUM_ZONAS+1, k=1; i <= NUM_ZONAS*2;i++,k++){ //Ver que zona critica esta abierta para poder leer de ella
 				//Obtener valor del semaforo en la posicion i
 				semValue = semctl(semid, i, GETVAL, NULL);
+				printf("c: %d",semValue);
 				//Si esta abierto
-				if(semValue > 0){
+				if(semValue == 1){
 					waitS(i);//Lo cierro
 						//Leemos la info
 						for(int j=0;j<columnas;j++){
 							printf("%c ",zonaCritica[(i-NUM_ZONAS-1)][j]);
 						}
 						printf("\n");
-					signalS(i-NUM_ZONAS); //Aviso a los productores que ya lei de esta zona
+					signalS(k); //Aviso a los productores que ya lei de esta zona
+					signalS(0); //Avisando al semaforo externo del productor que ya lei
 					break;
 				}
+				if(i==(NUM_ZONAS*2)){
+					i = NUM_ZONAS+1;
+					k=1;
+				}
 			}
-		signalS(0); //Avisando al semaforo externo del productor que ya lei
 	}
 	pthread_exit(0);
 }
 void waitS(int posicion){
-	printf("wait: %d \n", posicion);
+	//printf("wait: %d \n", posicion);
 	operacion.sem_num = posicion;
 	operacion.sem_op = -1;
 	operacion.sem_flg = SEM_UNDO;
@@ -156,7 +178,7 @@ void waitS(int posicion){
 }
 
 void signalS(int posicion){
-	printf("signal: %d \n", posicion);
+	//printf("signal: %d \n", posicion);
 	operacion.sem_num = posicion;
 	operacion.sem_op = 1;
 	operacion.sem_flg = SEM_UNDO;
